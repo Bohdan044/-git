@@ -1,0 +1,51 @@
+python
+
+import argparse
+import re
+import os
+
+def search_in_file(pattern, filename, ignore_case=False):
+    flags = re.IGNORECASE if ignore_case else 0
+    regex = re.compile(pattern, flags)
+
+    with open(filename, 'r', encoding='utf-8') as file:
+        for line in file:
+            if regex.search(line):
+                print(line.strip())
+
+def search_with_line_numbers(pattern, filename, show_line_numbers=False):
+    regex = re.compile(pattern)
+
+    with open(filename, 'r', encoding='utf-8') as file:
+        for index, line in enumerate(file, start=1):
+            if regex.search(line):
+                if show_line_numbers:
+                    print(f"{index}: {line.strip()}")
+                else:
+                    print(line.strip())
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Custom grep utility')
+    parser.add_argument('pattern', type=str, help='Pattern to search for')
+    parser.add_argument('files', nargs='*', help='Files to search in')
+
+     parser.add_argument('-i', '--ignore-case', action='store_true', help='Ignore case distinctions')
+    parser.add_argument('-v', '--invert-match', action='store_true', help='Select non-matching lines')
+    parser.add_argument('-c', '--count', action='store_true', help='Count matching lines')
+    parser.add_argument('-n', '--line-number', action='store_true', help='Show line numbers')
+    parser.add_argument('-r', '--recursive', action='store_true', help='Recursively search directories')
+    args = parser.parse_args()
+    return args
+
+def main():
+    args = parse_args()
+    if args.recursive:
+        for root, dirs, files in os.walk('.'):
+            for filename in files:
+                search_in_file(args.pattern, os.path.join(root, filename), ignore_case=args.ignore_case)
+    else:
+        for filename in args.files:
+            search_in_file(args.pattern, filename, ignore_case=args.ignore_case)
+
+if __name__ == '__main__':
+    main()
